@@ -1,0 +1,642 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Snua - Skin Analysis</title>
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+      body {
+        font-family: 'Montserrat', sans-serif;
+        background: linear-gradient(135deg, #1a202c, #2d3748);
+        color: #F5F5F7;
+      }
+      .glass-card {
+        background: rgba(45, 55, 72, 0.7);
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+      }
+      .fade-in {
+        animation: fadeIn 0.5s ease-in-out;
+      }
+      @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
+      }
+      .highlight {
+        color: #40E0D0;
+        cursor: pointer;
+        font-weight: bold;
+        text-decoration: underline;
+        text-decoration-color: rgba(64, 224, 208, 0.5);
+        text-underline-offset: 3px;
+      }
+    </style>
+  <link rel="stylesheet" href="/index.css">
+</head>
+  <body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+      const { useState, useEffect, useRef, useMemo } = React;
+
+      // MOCK DATA
+      const mockData = {
+        "overall_score": 68,
+        "main_concerns": [
+            { "concern": "Cystic and Pustular Acne", "severity": "Severe" },
+            { "concern": "Blackheads & Whiteheads", "severity": "Moderate" },
+            { "concern": "Inflamed Breakouts & Post-Inflammatory Hyperpigmentation (PIH)", "severity": "Moderate" }
+        ],
+        "detailed_breakdown": [
+            {
+                "area": "Cheeks",
+                "issue": "Cystic and Pustular Acne (Severe)",
+                "description": "Your cheeks show a significant presence of cystic and pustular lesions, which are often painful and indicate deeper inflammation. The humid Irish climate can sometimes contribute to increased sebum production, potentially exacerbating these types of breakouts by creating a more favourable environment for bacterial growth within pores.",
+                "recommendation": "Gently cleanse the area twice daily with a mild, pH-balanced cleanser. Avoid picking or squeezing lesions, as this can worsen inflammation and lead to scarring. Consider topical treatments specifically designed to calm active breakouts and reduce bacterial load."
+            },
+            {
+                "area": "Forehead & T-zone",
+                "issue": "Blackheads & Whiteheads (Moderate)",
+                "description": "The forehead and t-zone areas exhibit moderate levels of comedonal acne (blackheads and whiteheads). This is often due to a combination of excess oil production and dead skin cells clogging pores. The temperate Irish weather doesn't prevent this, and lifestyle factors like diet can play a significant role.",
+                "recommendation": "Incorporate a chemical exfoliant containing Salicylic Acid (BHA) into your routine 2-3 times per week. This will help to dissolve oil and debris within the pores. Ensure you use a lightweight, non-comedogenic moisturiser to maintain skin hydration without adding excess oil."
+            },
+            {
+                "area": "Jawline & Chin",
+                "issue": "Inflamed Breakouts & Post-Inflammatory Hyperpigmentation (PIH) (Moderate)",
+                "description": "This area shows signs of inflamed papules and some resulting Post-Inflammatory Hyperpigmentation (dark spots). These can be hormonally influenced but also aggravated by friction (e.g., from collars or masks). Due to lower average UV exposure in Ireland, PIH can still occur and may be more noticeable on fairer skin tones.",
+                "recommendation": "Use a gentle cleanser and spot treat inflamed breakouts. To address PIH, look for ingredients like Niacinamide or Azelaic Acid, which can help to fade dark spots over time. Consistent use of a broad-spectrum SPF 30+ is crucial, even on cloudy Irish days, to prevent PIH from darkening."
+            }
+        ],
+        "action_plan": {
+            "routine": [
+                {
+                    "step": "Morning Routine",
+                    "details": "1. Cleanse with a gentle, non-stripping face wash. 2. Apply a targeted treatment if needed (e.g., Niacinamide). 3. Use a lightweight, oil-free moisturiser. 4. CRITICAL: Apply broad-spectrum SPF 30+."
+                },
+                {
+                    "step": "Evening Routine",
+                    "details": "1. Cleanse thoroughly to remove the day's build-up. 2. Apply a chemical exfoliant (e.g., Salicylic Acid) 2-3 times a week on alternate nights. 3. Apply any other targeted treatments. 4. Finish with your moisturiser."
+                }
+            ],
+            "lifestyle_tips": [
+                {
+                    "tip": "Diet",
+                    "details": "Consider moderating high-glycemic foods and dairy, which can be potential triggers for some. Focus on a balanced diet rich in antioxidants."
+                },
+                {
+                    "tip": "Hygiene",
+                    "details": "Change your pillowcases regularly (at least twice a week) and clean your phone screen often to reduce bacterial transfer to your face."
+                },
+                {
+                    "tip": "Stress",
+                    "details": "Stress can elevate cortisol levels and worsen acne. Incorporate stress-management techniques like exercise or mindfulness into your routine."
+                }
+            ],
+            "products": [
+                {
+                    "name": "Gentle Foaming Cleanser",
+                    "brand": "CeraVe/La Roche-Posay (or similar)",
+                    "reason": "A mild, pH-balanced cleanser is essential to remove impurities without stripping the skin's natural moisture barrier, which is crucial for inflamed and acne-prone skin. It prepares your skin for other treatments without causing further irritation. (Available at our partner retailers like Boots and local pharmacies across Ireland. Get 20% OFF WITH SNUA)."
+                },
+                {
+                    "name": "Salicylic Acid (BHA) Treatment",
+                    "brand": "The Ordinary/Paula's Choice (or similar)",
+                    "reason": "This beta-hydroxy acid exfoliates inside the pore, effectively targeting blackheads, whiteheads, and preventing new breakouts. Start with a lower concentration (1-2%) a few times a week and gradually increase frequency as your skin adapts. (Available at our partner retailers like Boots and local pharmacies across Ireland. Get 20% OFF WITH SNUA)."
+                },
+                {
+                    "name": "Lightweight Hydrating Moisturizer",
+                    "brand": "Neutrogena Hydro Boost/Vichy Mineral 89 (or similar)",
+                    "reason": "Even oily or acne-prone skin needs hydration. Choose a non-comedogenic, oil-free formula to support the skin barrier without clogging pores, which is particularly important in a humid climate. This helps calm irritation and maintain skin health. (Available at our partner retailers like Boots and local pharmacies across Ireland. Get 20% OFF WITH SNUA)."
+                }
+            ]
+        },
+        "glossary_terms": [
+            {"term": "pH-balanced", "definition": "Refers to a product formulated with a pH level similar to that of your natural skin (around 4.7 to 5.75). This helps prevent irritation and stripping the skin's protective barrier."},
+            {"term": "Salicylic Acid (BHA)", "definition": "A type of chemical exfoliant that is oil-soluble, allowing it to penetrate into pores to dissolve oil, dead skin cells, and debris. It's highly effective for treating blackheads and whiteheads."},
+            {"term": "non-comedogenic", "definition": "A term used to describe skincare products that are formulated in a way that they are not likely to cause pore blockages (comedones) and breakouts."},
+            {"term": "Post-Inflammatory Hyperpigmentation (PIH)", "definition": "Dark spots or discoloration left on the skin after a pimple or other inflammation has healed. It's caused by an overproduction of melanin."},
+            {"term": "Niacinamide", "definition": "A form of vitamin B3, this ingredient is known for its ability to improve skin barrier function, reduce redness, control oil production, and fade dark spots."}
+        ]
+      };
+
+      //=========== COMPONENTS ===========//
+
+      const SnuaLogo = () => (
+        <div className="text-center">
+            <h1 className="text-8xl font-bold text-white tracking-tighter">SNUA</h1>
+        </div>
+      );
+
+      const Card = ({ children, className = '', onClick }) => (
+        <div className={`glass-card rounded-2xl p-6 shadow-lg ${className}`} onClick={onClick}>
+          {children}
+        </div>
+      );
+      
+      const CircularProgressBar = ({ score }) => {
+        const radius = 50;
+        const circumference = 2 * Math.PI * radius;
+        const offset = circumference - (score / 100) * circumference;
+
+        return (
+          <div className="relative flex items-center justify-center w-40 h-40">
+            <svg className="absolute w-full h-full" viewBox="0 0 120 120">
+              <circle
+                className="text-gray-600"
+                strokeWidth="10"
+                stroke="currentColor"
+                fill="transparent"
+                r={radius}
+                cx="60"
+                cy="60"
+              />
+              <circle
+                className="text-white"
+                strokeWidth="10"
+                stroke="currentColor"
+                fill="transparent"
+                r={radius}
+                cx="60"
+                cy="60"
+                strokeDasharray={circumference}
+                strokeDashoffset={offset}
+                strokeLinecap="round"
+                transform="rotate(-90 60 60)"
+                style={{ transition: 'stroke-dashoffset 0.5s ease-out' }}
+              />
+            </svg>
+            <span className="text-3xl font-bold text-white">{score}<span className="text-xl">/100</span></span>
+          </div>
+        );
+      };
+      
+      const Header = ({ title, onBack }) => (
+        <header className="relative flex items-center justify-center p-4 h-20">
+          {onBack && (
+            <button onClick={onBack} className="absolute left-4 p-2 transition-opacity hover:opacity-75">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+              </svg>
+            </button>
+          )}
+          <div className="text-center">
+            <h1 className="text-xl font-bold">{title}</h1>
+            <p className="text-sm text-gray-400">SNUA</p>
+          </div>
+        </header>
+      );
+      
+      const FaceMap = ({ animationSpeed = 'normal' }) => {
+        const durationClass = animationSpeed === 'fast' ? 'animate-pulse-fast' : 'animate-pulse';
+        return (
+          <div className="relative w-48 h-64 mx-auto my-4">
+             {/* Face Outline */}
+            <svg className="absolute inset-0 w-full h-full text-white/50" viewBox="0 0 100 130" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M50 2C23.5 2 2 30.5 2 61.5C2 92.5 23.5 128 50 128C76.5 128 98 92.5 98 61.5C98 30.5 76.5 2 50 2Z" stroke="currentColor" strokeWidth="1"/>
+              <path d="M30 65C30 63.3333 32.5 60 37.5 60C42.5 60 45 63.3333 45 65" stroke="currentColor" strokeWidth="1" strokeLinecap="round"/>
+              <path d="M70 65C70 63.3333 67.5 60 62.5 60C57.5 60 55 63.3333 55 65" stroke="currentColor" strokeWidth="1" strokeLinecap="round"/>
+              <path d="M50 70V85" stroke="currentColor" strokeWidth="1" strokeLinecap="round"/>
+              <path d="M40 95C42.5 98.3333 47.5 100 50 100C52.5 100 57.5 98.3333 60 95" stroke="currentColor" strokeWidth="1" strokeLinecap="round"/>
+            </svg>
+             {/* Glowing Dots */}
+            <div className={`absolute w-3 h-3 bg-white rounded-full ${durationClass}`} style={{ top: '25%', left: '30%', animationDelay: '0.1s' }}></div>
+            <div className={`absolute w-3 h-3 bg-white rounded-full ${durationClass}`} style={{ top: '40%', left: '50%', transform: 'translateX(-50%)' }}></div>
+            <div className={`absolute w-3 h-3 bg-white rounded-full ${durationClass}`} style={{ top: '35%', left: '70%', animationDelay: '0.2s' }}></div>
+            <div className={`absolute w-3 h-3 bg-white rounded-full ${durationClass}`} style={{ top: '60%', left: '20%', animationDelay: '0.3s' }}></div>
+            <div className={`absolute w-3 h-3 bg-white rounded-full ${durationClass}`} style={{ top: '70%', left: '80%', animationDelay: '0.4s' }}></div>
+          </div>
+        );
+      };
+      
+      const DetailedFaceMap = ({ concerns }) => {
+          const concernPositions = {
+              "Forehead": { top: '15%', left: '50%', color: '#FFD700' },
+              "Cheeks": { top: '50%', left: '30%', color: '#FF4500' },
+              "T-zone": { top: '40%', left: '50%', color: '#00BFFF' },
+              "Jawline & Chin": { top: '75%', left: '50%', color: '#9932CC' },
+          };
+          
+          return (
+             <div className="relative w-48 h-64 mx-auto my-8">
+                <svg className="absolute inset-0 w-full h-full text-white/30" viewBox="0 0 100 130" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M50 2C23.5 2 2 30.5 2 61.5C2 92.5 23.5 128 50 128C76.5 128 98 92.5 98 61.5C98 30.5 76.5 2 50 2Z" stroke="currentColor" strokeWidth="1"/>
+                    <path d="M30 65C30 63.3333 32.5 60 37.5 60C42.5 60 45 63.3333 45 65" stroke="currentColor" strokeWidth="1" strokeLinecap="round"/>
+                    <path d="M70 65C70 63.3333 67.5 60 62.5 60C57.5 60 55 63.3333 55 65" stroke="currentColor" strokeWidth="1" strokeLinecap="round"/>
+                    <path d="M40 95C42.5 98.3333 47.5 100 50 100C52.5 100 57.5 98.3333 60 95" stroke="currentColor" strokeWidth="1" strokeLinecap="round"/>
+                </svg>
+
+                {Object.entries(concernPositions).map(([area, {top, left, color}]) => (
+                    <div key={area}>
+                        <div className="absolute transform -translate-x-1/2 -translate-y-1/2" style={{ top, left }}>
+                            <div className="w-3 h-3 rounded-full animate-pulse" style={{ background: color, boxShadow: `0 0 10px ${color}` }}></div>
+                        </div>
+                        <span className="absolute text-xs text-white/70 transform -translate-x-1/2" style={{ top: `calc(${top} - 18px)`, left }}>{area}</span>
+                    </div>
+                ))}
+            </div>
+          );
+      };
+      
+      const Accordion = ({ title, children, defaultOpen = false }) => {
+        const [isOpen, setIsOpen] = useState(defaultOpen);
+        return (
+          <div className="glass-card mb-3 overflow-hidden">
+            <button onClick={() => setIsOpen(!isOpen)} className="w-full flex justify-between items-center p-4 text-left font-bold">
+              <span>{title}</span>
+              <svg className={`w-5 h-5 transition-transform transform ${isOpen ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+              </svg>
+            </button>
+            {isOpen && (
+              <div className="p-4 pt-0 text-gray-300">
+                {children}
+              </div>
+            )}
+          </div>
+        );
+      };
+      
+      const HighlightableText = ({ text, glossary, onTermClick }) => {
+        if (!text || !glossary || glossary.length === 0) {
+            return <span>{text}</span>;
+        }
+
+        const escapeRegExp = (string) => {
+            return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        };
+
+        const terms = glossary.map(g => g.term);
+        const regex = new RegExp(`(${terms.map(escapeRegExp).join('|')})`, 'gi');
+        const parts = text.split(regex);
+        
+        return (
+            <span>
+                {parts.map((part, index) => {
+                    const termLower = part.toLowerCase();
+                    const glossaryEntry = glossary.find(g => g.term.toLowerCase() === termLower);
+                    
+                    if (glossaryEntry) {
+                        return (
+                            <span key={index} className="highlight" onClick={(e) => { e.stopPropagation(); onTermClick(glossaryEntry); }}>
+                                {part}
+                            </span>
+                        );
+                    }
+                    return <span key={index}>{part}</span>;
+                })}
+            </span>
+        );
+      };
+
+      const GlossaryModal = ({ term, onClose }) => {
+        if (!term) return null;
+        return (
+            <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4 fade-in" onClick={onClose}>
+                <Card className="max-w-md w-full" onClick={e => e.stopPropagation()}>
+                    <h3 className="text-xl font-bold text-white mb-2">{term.term}</h3>
+                    <p className="text-gray-300">{term.definition}</p>
+                    <button onClick={onClose} className="mt-4 bg-white/20 text-white font-bold py-2 px-4 rounded-lg w-full hover:bg-white/30 transition">
+                        Close
+                    </button>
+                </Card>
+            </div>
+        );
+      };
+      
+      const AppIcon = ({ icon, name, isSelected, onClick }) => (
+        <div onClick={onClick} className="flex flex-col items-center space-y-2 cursor-pointer transition-transform transform hover:scale-105">
+            <div className={`w-20 h-20 rounded-2xl flex items-center justify-center transition-all duration-300 ${isSelected ? 'ring-4 ring-white' : 'ring-2 ring-transparent'}`}>
+                {icon}
+            </div>
+            <span className="text-sm">{name}</span>
+        </div>
+      );
+
+      //=========== ICONS ===========//
+      const HomeIcon = () => (<svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" /></svg>);
+      const ClipboardIcon = () => (<svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" /></svg>);
+      const SettingsIcon = () => (<svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /></svg>);
+      const SnuaAppIcon = () => (<div className="w-full h-full bg-gradient-to-br from-teal-400 to-green-400 rounded-2xl flex items-center justify-center font-bold text-2xl text-white tracking-tighter">SNUA</div>);
+      const ShieldbearerIcon = () => (<div className="w-full h-full bg-gray-800 rounded-2xl flex items-center justify-center"><svg width="70%" height="70%" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 2L4 6V12C4 18 12 22 12 22C12 22 20 18 20 12V6L12 2Z" fill="#374151"/><path d="M11.5 6V18" stroke="#38bdf8" strokeWidth="2" strokeLinecap="round" style={{boxShadow: '0 0 10px #38bdf8'}}/></svg></div>);
+      const SystemCoreIcon = () => (<div className="w-full h-full bg-gray-800 rounded-2xl flex items-center justify-center"><svg width="70%" height="70%" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M5 5H19V19H5V5Z" fill="#2d3748"/><path d="M9 5V3M15 5V3M9 19V21M15 19V21M5 9H3M5 15H3M19 9H21M19 15H21" stroke="#00BFFF" strokeWidth="1" strokeLinecap="round"/></svg></div>);
+      const ApexIcon = () => (<div className="w-full h-full bg-white rounded-2xl flex items-center justify-center"><svg width="70%" height="70%" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M3 18L8 10L12 14L21 3" stroke="#22c55e" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"/></svg></div>);
+      const DietIcon = () => (<svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 17h8m0 0V9m0 8l-8-8-4 4-6-6" /></svg>);
+      const StressIcon = () => (<svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8s-9-3.582-9-8 4.03-8 9-8 9 3.582 9 8z" /></svg>);
+      const BacteriaIcon = () => (<svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>);
+      const ProductPlaceholderIcon = () => (<svg className="w-10 h-10 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" /></svg>);
+
+      //=========== SCREEN COMPONENTS ===========//
+      
+      const WelcomeScreen = ({ onStart }) => (
+        <div className="h-full flex flex-col justify-center items-center text-center p-4">
+          <SnuaLogo />
+          <p className="mt-4 text-lg text-gray-300">Understand your skin. In private.</p>
+          <p className="mt-2 text-sm text-gray-400 max-w-sm">Welcome to your personal skin analysis. Our process is secure, data-driven, and designed with your privacy in mind.</p>
+          <div className="w-full max-w-sm mt-8 space-y-4">
+            <button onClick={onStart} className="w-full bg-white text-gray-900 font-bold py-3 px-6 rounded-lg text-lg transition-transform transform hover:scale-105">
+              Begin Private Analysis
+            </button>
+          </div>
+        </div>
+      );
+      
+      const ScanScreen = ({ onScanComplete }) => {
+        useEffect(() => {
+          const timer = setTimeout(() => {
+            onScanComplete();
+          }, 2500);
+          return () => clearTimeout(timer);
+        }, []);
+      
+        return (
+          <div className="h-full flex flex-col justify-center items-center text-center p-4">
+            <h2 className="text-3xl font-bold">Analysis in Progress</h2>
+            <FaceMap />
+            <p className="mt-4 text-gray-300">Analyzing skin zones...</p>
+          </div>
+        );
+      };
+      
+      const AnalysisScreen = ({ onAnalysisComplete }) => {
+        useEffect(() => {
+          const timer = setTimeout(() => {
+            onAnalysisComplete(mockData);
+          }, 1500);
+          return () => clearTimeout(timer);
+        }, []);
+      
+        return (
+          <div className="h-full flex flex-col justify-center items-center text-center p-4">
+            <div className="w-16 h-16 border-4 border-white/50 border-t-white rounded-full animate-spin"></div>
+            <p className="mt-6 text-lg">Generating your results...</p>
+          </div>
+        );
+      };
+
+      const ResultsScreen = ({ analysisData, onSeeBreakdown, onStartOver }) => {
+        const [feedback, setFeedback] = useState(null);
+        if (!analysisData) return null;
+
+        const getSeverityColor = (severity) => {
+          switch (severity.toLowerCase()) {
+            case 'severe': return 'bg-red-500';
+            case 'moderate': return 'bg-yellow-500';
+            case 'mild': return 'bg-green-500';
+            default: return 'bg-gray-500';
+          }
+        };
+
+        return (
+          <div className="p-4 space-y-4 pb-24">
+            <Card>
+              <h3 className="text-center font-bold text-lg mb-4">Overall Skin Health Score</h3>
+              <div className="flex justify-center">
+                <CircularProgressBar score={analysisData.overall_score} />
+              </div>
+            </Card>
+
+            <Card>
+              <h3 className="font-bold text-lg mb-4">Primary Concerns Identified</h3>
+              <ul className="space-y-3">
+                {analysisData.main_concerns.map(item => (
+                  <li key={item.concern} className="flex items-center">
+                    <span className={`w-3 h-3 rounded-full mr-3 ${getSeverityColor(item.severity)}`}></span>
+                    <div>
+                      <p className="font-semibold">{item.concern}</p>
+                      <p className="text-sm text-gray-400">{item.severity}</p>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            </Card>
+
+            <Card>
+              {feedback ? (
+                <p className="text-center text-gray-300">{feedback}</p>
+              ) : (
+                <>
+                  <p className="text-center mb-3">Was this analysis helpful?</p>
+                  <div className="flex justify-center space-x-4">
+                    <button onClick={() => setFeedback('Thank you for your feedback!')} className="bg-white/10 py-2 px-6 rounded-lg hover:bg-white/20 transition">Yes</button>
+                    <button onClick={() => setFeedback('Thank you for your feedback!')} className="bg-white/10 py-2 px-6 rounded-lg hover:bg-white/20 transition">No</button>
+                  </div>
+                </>
+              )}
+            </Card>
+            
+            <div className="space-y-3 pt-2">
+                <button onClick={onSeeBreakdown} className="w-full bg-white text-gray-900 font-bold py-3 px-6 rounded-lg text-lg transition-transform transform hover:scale-105">
+                    See Detailed Breakdown
+                </button>
+                <button onClick={onStartOver} className="w-full bg-transparent border-2 border-white/50 text-white font-bold py-3 px-6 rounded-lg hover:bg-white/10 transition">
+                    Scan Again
+                </button>
+            </div>
+          </div>
+        );
+      };
+
+      const DetailedBreakdownScreen = ({ analysisData, onTermClick }) => (
+        <div className="p-4 pb-24">
+          <DetailedFaceMap concerns={analysisData.detailed_breakdown} />
+          {analysisData.detailed_breakdown.map((item, index) => (
+            <Accordion key={item.area} title={item.issue} defaultOpen={index === 0}>
+              <p className="mb-2"><HighlightableText text={item.description} glossary={analysisData.glossary_terms} onTermClick={onTermClick} /></p>
+              <p className="font-bold mt-3 mb-1">Recommendation:</p>
+              <p><HighlightableText text={item.recommendation} glossary={analysisData.glossary_terms} onTermClick={onTermClick} /></p>
+            </Accordion>
+          ))}
+        </div>
+      );
+      
+      const ProductCard = ({ product, glossary, onTermClick }) => (
+        <Card className="flex items-start space-x-4">
+            <div className="flex-shrink-0 w-16 h-16 bg-gray-700 rounded-lg flex items-center justify-center">
+                {product.image_url ? (
+                  <img src={product.image_url} alt={product.name} className="w-full h-full object-cover rounded-lg" />
+                ) : (
+                  <ProductPlaceholderIcon />
+                )}
+            </div>
+            <div className="flex-grow">
+                <div className="flex justify-between items-start">
+                    <div>
+                        <h4 className="font-bold text-white">{product.name}</h4>
+                        <p className="text-sm text-gray-400 mb-2">{product.brand}</p>
+                    </div>
+                    <span className="ml-4 flex-shrink-0 text-xs bg-teal-400/80 text-teal-900 font-bold px-2 py-1 rounded-full">20% OFF</span>
+                </div>
+                <p className="text-sm text-gray-300">
+                    <HighlightableText text={product.reason} glossary={glossary} onTermClick={onTermClick} />
+                </p>
+            </div>
+        </Card>
+      );
+
+      const ActionPlanScreen = ({ analysisData, onTermClick }) => {
+        const lifestyleIcons = {
+            "Diet": <DietIcon />,
+            "Stress": <StressIcon />,
+            "Hygiene": <BacteriaIcon />,
+        };
+        return (
+            <div className="p-4 space-y-6 pb-24">
+              <div>
+                <h3 className="text-xl font-bold mb-3">Your Routine</h3>
+                {analysisData.action_plan.routine.map(step => (
+                    <Accordion key={step.step} title={step.step}>
+                        <p>{step.details}</p>
+                    </Accordion>
+                ))}
+              </div>
+              
+              <div>
+                <h3 className="text-xl font-bold mb-3">Product Recommendations</h3>
+                <div className="space-y-4">
+                    {analysisData.action_plan.products.map(product => (
+                       <ProductCard key={product.name} product={product} glossary={analysisData.glossary_terms} onTermClick={onTermClick} />
+                    ))}
+                </div>
+              </div>
+
+              <div>
+                <h3 className="text-xl font-bold mb-3">Lifestyle Tips</h3>
+                 <div className="space-y-4">
+                    {analysisData.action_plan.lifestyle_tips.map(tip => (
+                        <Card key={tip.tip} className="flex items-center space-x-4">
+                            <div className="text-teal-400">{lifestyleIcons[tip.tip] || <StressIcon />}</div>
+                            <div>
+                                <h4 className="font-bold text-white">{tip.tip}</h4>
+                                <p className="text-sm text-gray-300">{tip.details}</p>
+                            </div>
+                        </Card>
+                    ))}
+                </div>
+              </div>
+            </div>
+        );
+      };
+      
+      const SettingsScreen = () => {
+        const icons = [
+          { name: 'Snua', icon: <SnuaAppIcon /> },
+          { name: 'Shieldbearer', icon: <ShieldbearerIcon /> },
+          { name: 'System Core', icon: <SystemCoreIcon /> },
+          { name: 'Apex', icon: <ApexIcon /> },
+        ];
+        const [selected, setSelected] = useState(icons[0].name);
+        const [message, setMessage] = useState('');
+        
+        const handleSelect = (name) => {
+            setSelected(name);
+            setMessage(`App icon changed to "${name}"`);
+            setTimeout(() => setMessage(''), 2000);
+        };
+
+        return (
+            <div className="p-4 pb-24">
+                <h2 className="text-2xl font-bold">Discreet App Icons</h2>
+                <p className="text-gray-400 mt-1 mb-6">For your privacy, you can change how the Snua app icon appears on your home screen.</p>
+                <div className="grid grid-cols-4 gap-4">
+                    {icons.map(icon => (
+                        <AppIcon key={icon.name} {...icon} isSelected={selected === icon.name} onClick={() => handleSelect(icon.name)} />
+                    ))}
+                </div>
+                 <div className="mt-6 text-center h-6">
+                    {message && <p className="text-teal-400 fade-in">{message}</p>}
+                 </div>
+                <p className="text-xs text-gray-500 text-center mt-4">Note: This is a simulation for demonstration purposes. In a real app, this would change the actual home screen icon.</p>
+            </div>
+        );
+      };
+      
+      //=========== MAIN APP COMPONENT ===========//
+
+      const App = () => {
+        const [screen, setScreen] = useState('welcome'); // welcome, scan, analysis, results, breakdown, plan, settings
+        const [analysisData, setAnalysisData] = useState(null);
+        const [history, setHistory] = useState(['welcome']);
+        const [glossaryTerm, setGlossaryTerm] = useState(null);
+
+        const navigateTo = (newScreen) => {
+            setHistory(prev => [...prev, newScreen]);
+            setScreen(newScreen);
+        };
+        
+        const handleBack = () => {
+            const newHistory = [...history];
+            newHistory.pop();
+            const prevScreen = newHistory[newHistory.length - 1];
+            setHistory(newHistory);
+            setScreen(prevScreen);
+        };
+
+        const handleStartOver = () => {
+            setAnalysisData(null);
+            setHistory(['welcome']);
+            setScreen('welcome');
+        };
+
+        const renderScreen = () => {
+          switch (screen) {
+            case 'welcome': return <WelcomeScreen onStart={() => navigateTo('scan')} />;
+            case 'scan': return <ScanScreen onScanComplete={() => navigateTo('analysis')} />;
+            case 'analysis': return <AnalysisScreen onAnalysisComplete={(data) => { setAnalysisData(data); navigateTo('results'); }} />;
+            case 'results': return <ResultsScreen analysisData={analysisData} onSeeBreakdown={() => navigateTo('breakdown')} onStartOver={handleStartOver} />;
+            case 'breakdown': return <DetailedBreakdownScreen analysisData={analysisData} onTermClick={setGlossaryTerm} />;
+            case 'plan': return <ActionPlanScreen analysisData={analysisData} onTermClick={setGlossaryTerm} />;
+            case 'settings': return <SettingsScreen />;
+            default: return <WelcomeScreen onStart={() => navigateTo('scan')} />;
+          }
+        };
+
+        const getTitle = () => {
+            switch(screen) {
+                case 'results': return 'Your Results';
+                case 'breakdown': return 'Detailed Breakdown';
+                case 'plan': return 'Your Action Plan';
+                case 'settings': return 'Settings & Privacy';
+                default: return '';
+            }
+        };
+
+        return (
+           <div className="min-h-screen flex justify-center items-start p-0 sm:p-4">
+              <div className="w-full max-w-lg min-h-screen sm:min-h-0 sm:h-[85vh] sm:max-h-[900px] bg-[#1a202c] sm:rounded-3xl shadow-2xl flex flex-col relative overflow-hidden">
+                {screen !== 'welcome' && screen !== 'scan' && screen !== 'analysis' && <Header title={getTitle()} onBack={history.length > 1 ? handleBack : null} />}
+                
+                <main className="flex-grow overflow-y-auto">
+                  {renderScreen()}
+                </main>
+                
+                {analysisData && (
+                    <div className="flex-shrink-0">
+                       <nav className="w-full glass-card flex justify-around p-2">
+                        {[{name: 'Home', icon: <HomeIcon />, screen: 'results'}, {name: 'Action Plan', icon: <ClipboardIcon />, screen: 'plan'}, {name: 'Settings', icon: <SettingsIcon />, screen: 'settings'}].map(item => (
+                            <button key={item.name} onClick={() => navigateTo(item.screen)} className={`flex flex-col items-center p-2 rounded-lg w-24 transition ${screen === item.screen ? 'text-teal-400' : 'text-gray-400 hover:text-white'}`}>
+                                {item.icon}
+                                <span className="text-xs mt-1">{item.name}</span>
+                            </button>
+                        ))}
+                       </nav>
+                    </div>
+                )}
+                <GlossaryModal term={glossaryTerm} onClose={() => setGlossaryTerm(null)} />
+              </div>
+           </div>
+        );
+      };
+
+      ReactDOM.render(<App />, document.getElementById('root'));
+    </script>
+  <script type="module" src="/index.tsx"></script>
+</body>
+</html>
